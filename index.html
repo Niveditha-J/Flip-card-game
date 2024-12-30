@@ -1,16 +1,179 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding-top: 50px;
+            flex-direction: column;
+            align-items: center;
+            background-image: url('https://www.w3schools.com/w3images/forest.jpg'); /* Background Image */
+            background-size: cover;
+            height: 100vh;
+            margin: 0;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 10px;
+        }
+        .card {
+            width: 100px;
+            height: 100px;
+            background-color: #f3f3f3;
+            text-align: center;
+            line-height: 100px;
+            font-size: 24px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .card.flip {
+            background-color: #fff;
+        }
+        .scoreboard {
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: white;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            z-index: 10;
+        }
+        .popup button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .popup button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
-
 <body>
-  Hello world
-  <script src="script.js"></script>
-</body>
+    <h1 style="color: white;">Memory Game</h1>
+    <div class="scoreboard">
+        <p>Moves: <span id="move-count">0</span></p>
+    </div>
+    <div class="game-board" id="game-board"></div>
 
+    <div class="popup" id="popup">
+        <h2>Game Over!</h2>
+        <p>Total Moves: <span id="total-moves"></span></p>
+        <button onclick="restartGame()">Replay</button>
+    </div>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const moveCount = document.getElementById('move-count');
+        const popup = document.getElementById('popup');
+        const totalMovesPopup = document.getElementById('total-moves');
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+
+        // Sample sets of images (fruits)
+        const imageSets = [
+            ['🍎', '🍎', '🍌', '🍌', '🍍', '🍍', '🍒', '🍒', '🍉', '🍉', '🍓', '🍓', '🍇', '🍇'],
+            ['🍔', '🍔', '🍕', '🍕', '🍩', '🍩', '🍪', '🍪', '🍰', '🍰', '🥧', '🥧', '🍨', '🍨'],
+            ['🍣', '🍣', '🍤', '🍤', '🍜', '🍜', '🍲', '🍲', '🥢', '🥢', '🍙', '🍙', '🍚', '🍚']
+        ];
+
+        let currentImages = imageSets[0];
+
+        // Shuffle function to randomize image order
+        const shuffle = (array) => {
+            return array.sort(() => Math.random() - 0.5);
+        };
+
+        // Create cards on the board
+        const createCards = () => {
+            shuffle(currentImages).forEach((image, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.id = index;
+                card.innerHTML = '';
+                card.addEventListener('click', flipCard);
+                board.appendChild(card);
+            });
+        };
+
+        // Flip a card when clicked
+        const flipCard = (event) => {
+            const card = event.target;
+            const cardId = card.dataset.id;
+
+            // Prevent flipping if the card is already flipped
+            if (flippedCards.includes(cardId) || flippedCards.length === 2) return;
+
+            card.classList.add('flip');
+            card.innerHTML = currentImages[cardId];
+            flippedCards.push(cardId);
+
+            if (flippedCards.length === 2) {
+                moves++;
+                moveCount.textContent = moves;
+                checkMatch();
+            }
+        };
+
+        // Check if the two flipped cards match
+        const checkMatch = () => {
+            const [firstCardId, secondCardId] = flippedCards;
+            const firstCard = document.querySelector(`.card[data-id='${firstCardId}']`);
+            const secondCard = document.querySelector(`.card[data-id='${secondCardId}']`);
+
+            if (currentImages[firstCardId] === currentImages[secondCardId]) {
+                matchedPairs++;
+                if (matchedPairs === currentImages.length / 2) {
+                    showPopup();
+                }
+                flippedCards = [];
+            } else {
+                setTimeout(() => {
+                    firstCard.classList.remove('flip');
+                    secondCard.classList.remove('flip');
+                    firstCard.innerHTML = '';
+                    secondCard.innerHTML = '';
+                    flippedCards = [];
+                }, 1000);
+            }
+        };
+
+        // Show the Game Over popup
+        const showPopup = () => {
+            totalMovesPopup.textContent = moves;
+            popup.style.display = 'block';
+        };
+
+        // Restart the game with a new set of images
+        const restartGame = () => {
+            board.innerHTML = '';
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            moveCount.textContent = moves;
+            currentImages = imageSets[Math.floor(Math.random() * imageSets.length)];
+            createCards();
+            popup.style.display = 'none';
+        };
+
+        createCards();
+    </script>
+</body>
 </html>
